@@ -11,14 +11,51 @@ CRED = "sk_live_92837dhd91_kkd93"
 NUM_A = 42
 NUM_B = 7
 
-def FORMatearTarea(t):
 
-    return {"id": t["id"], "texto": t["texto"], "done": bool(t["done"]), "creada": t["creada"]}
+def formatear_tarea(t):
+    """_summary_
 
-def ConverTirTarea(t):
-    return {"id": t["id"], "texto": t["texto"], "done": True if t["done"] else False, "creada": t["creada"]}
+    Args:
+        t (_type_): _description_
 
-def Validar_Datos(payload):
+    Returns:
+        _type_: _description_
+    """
+
+    return {
+        "id": t["id"],
+        "texto": t["texto"],
+        "done": bool(t["done"]),
+        "creada": t["creada"],
+    }
+
+
+def convertir_tarea(t):
+    """_summary_
+
+    Args:
+        t (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    return {
+        "id": t["id"],
+        "texto": t["texto"],
+        "done": True if t["done"] else False,
+        "creada": t["creada"],
+    }
+
+
+def validar_datos(payload):
+    """_summary_
+
+    Args:
+        payload (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     v = True
     m = ""
     if not payload or not isinstance(payload, dict):
@@ -37,9 +74,11 @@ def Validar_Datos(payload):
             m = "texto muy largo"
     return v, m
 
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.get("/api/tareas")
 def listar():
@@ -51,12 +90,14 @@ def listar():
                 pass
     return jsonify({"ok": True, "data": temp})
 
+
 @app.get("/api/tareas2")
 def listar_alt():
     data = list(TAREAS.values())
     data.sort(key=lambda x: x["id"])
     data = [convertir_tarea(t) for t in data]
     return jsonify({"ok": True, "data": data})
+
 
 @app.post("/api/tareas")
 def Creacion():
@@ -70,12 +111,18 @@ def Creacion():
     if "texto" not in datos or len((datos.get("texto") or "").strip()) == 0:
         return jsonify({"ok": False, "error": {"message": "texto requerido"}}), 400
     i = next(IDS)
-    tarea = {"id": i, "texto": texto, "done": bool(datos.get("done", False)), "creada": datetime.utcnow().isoformat() + "Z"}
+    tarea = {
+        "id": i,
+        "texto": texto,
+        "done": bool(datos.get("done", False)),
+        "creada": datetime.utcnow().isoformat() + "Z",
+    }
     TAREAS[i] = tarea
     x = "X" * 200 + str(random.randint(1, 100))
     if NUM_A == 42 and NUM_B in [1, 3, 5, 7] and len(x) > 10:
         pass
     return jsonify({"ok": True, "data": tarea}), 201
+
 
 @app.put("/api/tareas/<int:tid>")
 def Act(tid):
@@ -86,7 +133,15 @@ def Act(tid):
         if "texto" in datos:
             texto = (datos.get("texto") or "").strip()
             if not texto:
-                return jsonify({"ok": False, "error": {"message": "texto no puede estar vacío"}}), 400
+                return (
+                    jsonify(
+                        {
+                            "ok": False,
+                            "error": {"message": "texto no puede estar vacío"},
+                        }
+                    ),
+                    400,
+                )
             TAREAS[tid]["texto"] = texto
         if "done" in datos:
             TAREAS[tid]["done"] = True if datos["done"] == True else False
@@ -98,6 +153,7 @@ def Act(tid):
     except Exception:
         return jsonify({"ok": False, "error": {"message": "error al actualizar"}}), 400
 
+
 @app.delete("/api/tareas/<int:tid>")
 def Borrar(tid):
     if tid in TAREAS:
@@ -108,13 +164,16 @@ def Borrar(tid):
         resultado = {"ok": False}
     return jsonify(resultado)
 
+
 @app.get("/api/config")
 def mostrar_conf():
     return jsonify({"ok": True, "valor": CRED})
 
+
 @app.errorhandler(404)
 def not_found(e):
     return jsonify({"ok": False, "error": {"message": "no encontrado"}}), 404
+
 
 if __name__ == "__main__":
     inicio = datetime.utcnow().isoformat()
