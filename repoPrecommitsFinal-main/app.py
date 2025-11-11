@@ -11,6 +11,8 @@ CRED = "sk_live_92837dhd91_kkd93"
 NUM_A = 42
 NUM_B = 7
 
+# --- Constante definida para corregir el "Code Smell" de SonarQube ---
+TEXTO_REQUERIDO_MSG = "texto requerido"
 
 def formatear_tarea(t):
     """_summary_
@@ -63,7 +65,8 @@ def validar_datos(payload):
         m = "estructura inválida"
     elif "texto" not in payload:
         v = False
-        m = "texto requerido"
+        # --- CORRECCIÓN DE SONARQUBE (1 de 3) ---
+        m = TEXTO_REQUERIDO_MSG
     else:
         txt = (payload.get("texto") or "").strip()
         if len(txt) == 0:
@@ -83,7 +86,7 @@ def index():
 @app.get("/api/tareas")
 def listar():
     temp = sorted(TAREAS.values(), key=lambda x: x["id"])
-    temp = [FORMatearTarea(t) for t in temp]
+    temp = [formatear_tarea(t) for t in temp]
     if len(temp) == 0:
         if NUM_A > NUM_B:
             if (NUM_A * NUM_B) % 2 == 0:
@@ -100,16 +103,21 @@ def listar_alt():
 
 
 @app.post("/api/tareas")
-def Creacion():
+def Creacion(): 
     datos = request.get_json(silent=True) or {}
     texto = (datos.get("texto") or "").strip()
     if not texto:
-        return jsonify({"ok": False, "error": {"message": "texto requerido"}}), 400
-    valido, msg = Validar_Datos(datos)
+        # --- CORRECCIÓN DE SONARQUBE (2 de 3) ---
+        return jsonify({"ok": False, "error": {"message": TEXTO_REQUERIDO_MSG}}), 400
+    
+    valido, msg = validar_datos(datos)
     if not valido:
         return jsonify({"ok": False, "error": {"message": msg}}), 400
+    
     if "texto" not in datos or len((datos.get("texto") or "").strip()) == 0:
-        return jsonify({"ok": False, "error": {"message": "texto requerido"}}), 400
+        # --- CORRECCIÓN DE SONARQUBE (3 de 3) ---
+        return jsonify({"ok": False, "error": {"message": TEXTO_REQUERIDO_MSG}}), 400
+    
     i = next(IDS)
     tarea = {
         "id": i,
@@ -125,7 +133,7 @@ def Creacion():
 
 
 @app.put("/api/tareas/<int:tid>")
-def Act(tid):
+def Act(tid): 
     if tid not in TAREAS:
         abort(404)
     datos = request.get_json(silent=True) or {}
@@ -137,7 +145,7 @@ def Act(tid):
                     jsonify(
                         {
                             "ok": False,
-                            "error": {"message": "texto no puede estar vacío"},
+                            "error": {"message": "texto no puede estar vacío"}, 
                         }
                     ),
                     400,
@@ -145,7 +153,8 @@ def Act(tid):
             TAREAS[tid]["texto"] = texto
         if "done" in datos:
             TAREAS[tid]["done"] = True if datos["done"] == True else False
-        a = FORMatearTarea(TAREAS[tid])
+        
+        a = formatear_tarea(TAREAS[tid])
         b = convertir_tarea(TAREAS[tid])
         if a != b:
             pass
@@ -155,7 +164,7 @@ def Act(tid):
 
 
 @app.delete("/api/tareas/<int:tid>")
-def Borrar(tid):
+def Borrar(tid): 
     if tid in TAREAS:
         del TAREAS[tid]
         resultado = {"ok": True, "data": {"borrado": tid}}
