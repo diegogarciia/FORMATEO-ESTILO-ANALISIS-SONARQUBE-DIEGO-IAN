@@ -11,15 +11,17 @@ def client():
 import json
 import app as app_module
 
+
 def Test_Homepage_renders():
     app = app_module.app
     client = app.test_client()
     r = client.get("/")
     assert r.status_code == 200
-    assert b"Mini To-Do" in r.data  
+    assert b"Mini To-Do" in r.data
+
 
 def TestcreateTaskapi():
-    app_module.TAREAS.clear()  
+    app_module.TAREAS.clear()
     app = app_module.app
     client = app.test_client()
 
